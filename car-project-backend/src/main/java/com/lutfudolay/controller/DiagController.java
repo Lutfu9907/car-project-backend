@@ -33,4 +33,10 @@ public class DiagController {
         int rpm = elm.readRpm();
         return ResponseEntity.ok(rpm);
     }
+    
+    @GetMapping("/vin")
+    public ResponseEntity<String> readVin() {
+        String vin = elm.readVin();
+        return ResponseEntity.ok(vin);
+    }
 }
