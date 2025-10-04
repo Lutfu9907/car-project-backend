@@ -1,4 +1,4 @@
-package com.lutfudolay.dto;
+package com.lutfudolay.license;
 
 public class LicenseResponse {
 

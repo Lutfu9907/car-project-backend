@@ -1,4 +1,4 @@
-package com.lutfudolay.service.impl;
+package com.lutfudolay.license;
 
 import java.io.File;
 import java.time.LocalDate;
@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.lutfudolay.dto.LicenseRequest;
 
 import jakarta.persistence.criteria.Path;
 import lombok.Data;
@@ -42,7 +41,7 @@ public class LicenseService {
         return licenseKey != null && licenseKey.matches("[A-Z0-9\\-]{8,40}");
     }
 
-    public Path createAndStoreLicense(LicenseRequest req) throws Exception {
+    public File createAndStoreLicense(LicenseRequest req) throws Exception {
         LocalDate validUntil = LocalDate.now().plusDays(defaultValidDays);
 
         LicensePayload payload = new LicensePayload();
@@ -64,7 +63,7 @@ public class LicenseService {
 
         mapper.writeValue(f, file);
         log.info("License written to {}", f.getAbsolutePath());
-        return f.toPath();
+        return f;
     }
 
     public boolean validateLocalLicenseFile() {
