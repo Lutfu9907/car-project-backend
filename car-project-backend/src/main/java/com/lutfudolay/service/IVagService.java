@@ -2,6 +2,6 @@ package com.lutfudolay.service;
 
 public interface IVagService {
 
-	String enableCarplay();
-    String enableVideoInMotion();
+	String enableCarplay(String vin);
+    String enableVideoInMotion(String vin);
 }

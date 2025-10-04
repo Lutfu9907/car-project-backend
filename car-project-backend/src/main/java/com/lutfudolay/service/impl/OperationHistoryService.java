@@ -12,14 +12,14 @@ import com.lutfudolay.repository.OperationHistoryRepository;
 public class OperationHistoryService {
 
 	 @Autowired
-	    private OperationHistoryRepository repository;
+	 private OperationHistoryRepository repository;
 
-	    public OperationHistory save(String vin, String operationType, String result) {
-	        OperationHistory history = new OperationHistory(vin, operationType, result);
-	        return repository.save(history);
-	    }
+	 public OperationHistory save(String vin, String operationType, String result) {
+		 OperationHistory history = new OperationHistory(vin, operationType, result);
+		 return repository.save(history);
+	 }
 
-	    public List<OperationHistory> getAll() {
-	        return repository.findAll();
-	    }
+	 public List<OperationHistory> getAll() {
+		 return repository.findAll();
+	 }
 }
