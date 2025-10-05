@@ -111,7 +111,22 @@ public class LicenseService {
             return null;
         }
     }
-
+    
+    public boolean resetLicense() {
+        try {
+            File f = new File(licenseFilePath);
+            if (f.exists() && f.delete()) {
+                log.info("Lisans dosyası silindi: {}", f.getAbsolutePath());
+                return true;
+            } else {
+                log.warn("Silinecek lisans dosyası bulunamadı: {}", f.getAbsolutePath());
+                return false;
+            }
+        } catch (Exception e) {
+            log.error("Lisans sıfırlama hatası: {}", e.getMessage());
+            return false;
+        }
+    }
 
     private String hmacSha256Base64(String data, String key) throws Exception {
         Mac mac = Mac.getInstance("HmacSHA256");
