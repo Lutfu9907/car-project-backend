@@ -151,12 +151,12 @@ public class ElmServiceImpl {
         try {
             if (mockMode) {
                 int mockRpm = 780;
-                historyService.save("MOCK_VIN", "RPM Okuma", "Başarılı (Mock) -> " + mockRpm);
+                //historyService.save("MOCK_VIN", "RPM Okuma", "Başarılı (Mock) -> " + mockRpm);
                 return mockRpm;
             }
 
             if (port == null || !port.isOpen()) {
-                historyService.save("UNKNOWN", "RPM Okuma", "Hata: Port bağlı değil");
+                //historyService.save("UNKNOWN", "RPM Okuma", "Hata: Port bağlı değil");
                 throw new IllegalStateException("Port bağlı değil");
             }
 
@@ -168,15 +168,15 @@ public class ElmServiceImpl {
                 int B = Integer.parseInt(parts[parts.length - 1], 16);
                 int rpm = ((A * 256) + B) / 4;
 
-                historyService.save("REAL_VIN", "RPM Okuma", "Başarılı -> " + rpm);
+                //historyService.save("REAL_VIN", "RPM Okuma", "Başarılı -> " + rpm);
                 log.info("RPM okundu: {}", rpm);
                 return rpm;
             } else {
-                historyService.save("UNKNOWN", "RPM Okuma", "Hata: Yanıt çözülemedi");
+               // historyService.save("UNKNOWN", "RPM Okuma", "Hata: Yanıt çözülemedi");
                 throw new IllegalStateException("RPM yanıtı çözülemedi: " + resp);
             }
         } catch (Exception e) {
-            historyService.save("UNKNOWN", "RPM Okuma", "Hata: " + e.getMessage());
+           // historyService.save("UNKNOWN", "RPM Okuma", "Hata: " + e.getMessage());
             log.error("RPM okuma hatası: {}", e.getMessage());
             throw e;
         }
@@ -219,6 +219,21 @@ public class ElmServiceImpl {
             throw e;
         }
     }
+
+	public void disconnect() {
+		try {
+	        if (port != null && port.isOpen()) {
+	            port.closePort();
+	            log.info("OBD baglantisi sonlandirildi.");
+	        } else {
+	            log.info("OBD zaten kapali.");
+	        }
+	    } catch (Exception e) {
+	        log.error("OBD disconnect hatasi: {}", e.getMessage());
+	    } finally {
+	        port = null;
+	    }
+	}
  }
 
 

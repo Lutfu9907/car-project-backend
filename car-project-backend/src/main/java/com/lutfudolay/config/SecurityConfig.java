@@ -15,11 +15,14 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/license/**").permitAll()
                 .requestMatchers("/api/obd/**").permitAll()
                 .requestMatchers("/api/vag/**").permitAll()
                 .requestMatchers("/api/history/**").permitAll()
-                .anyRequest().authenticated()
-            );
+                .anyRequest().permitAll() 
+            )
+            .formLogin(login -> login.disable())
+            .httpBasic(basic -> basic.disable());
         return http.build();
     }
 }

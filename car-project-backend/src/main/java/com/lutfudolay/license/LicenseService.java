@@ -1,6 +1,7 @@
 package com.lutfudolay.license;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
@@ -13,7 +14,6 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import jakarta.persistence.criteria.Path;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LicenseService {
 
-	@Value("${app.license.secret}")
+    @Value("${app.license.secret}")
     private String secret;
 
     @Value("${app.license.file}")
@@ -33,15 +33,13 @@ public class LicenseService {
     private final ObjectMapper mapper = new ObjectMapper();
     private final DateTimeFormatter fmt = DateTimeFormatter.ISO_LOCAL_DATE;
 
-    // Basit server-side doğrulama simülasyonu.
-    // Gerçek ürün: server doğrulamalı. Burada "pattern" bazlı kontrol yapıyoruz.
-    
+    // 1️⃣ Lisans formatını basitçe doğrula (örnek: ABCD-1234-EFGH)
     public boolean verifyLicenseKeyFormat(String licenseKey) {
-        
-        return licenseKey != null && licenseKey.matches("[A-Z0-9\\-]{8,40}");
+        return licenseKey != null && licenseKey.matches("[A-Z0-9\\-]{10,}");
     }
 
-    public File createAndStoreLicense(LicenseRequest req) throws Exception {
+    // 2️⃣ Lisans dosyası oluştur ve kaydet
+    public Path createAndStoreLicense(LicenseRequest req) throws Exception {
         LocalDate validUntil = LocalDate.now().plusDays(defaultValidDays);
 
         LicensePayload payload = new LicensePayload();
@@ -57,36 +55,64 @@ public class LicenseService {
         file.setPayload(payload);
         file.setSignature(sig);
 
-        // ensure dir exists
         File f = new File(licenseFilePath);
-        f.getParentFile().mkdirs();
+        if (f.getParentFile() != null)
+            f.getParentFile().mkdirs();
 
         mapper.writeValue(f, file);
         log.info("License written to {}", f.getAbsolutePath());
-        return f;
+        return f.toPath();
     }
 
+    // 3️⃣ Yerel lisans dosyasını kontrol et
     public boolean validateLocalLicenseFile() {
         try {
             File f = new File(licenseFilePath);
-            if (!f.exists()) return false;
+            if (!f.exists()) {
+                log.warn("License file not found: {}", f.getAbsolutePath());
+                return false;
+            }
+
             LicenseFile file = mapper.readValue(f, LicenseFile.class);
             String json = mapper.writeValueAsString(file.getPayload());
             String sig = hmacSha256Base64(json, secret);
+
             if (!sig.equals(file.getSignature())) {
                 log.warn("License signature mismatch");
                 return false;
             }
-            // expiry check
+
             LocalDate until = LocalDate.parse(file.getPayload().getValidUntil(), fmt);
-            return !LocalDate.now().isAfter(until);
+            if (LocalDate.now().isAfter(until)) {
+                log.warn("License expired on {}", until);
+                return false;
+            }
+
+            log.info("License valid until {}", until);
+            return true;
         } catch (Exception e) {
-            log.warn("Local license validate failed: {}", e.getMessage());
+            log.warn("Local license validation failed: {}", e.getMessage());
             return false;
         }
     }
+    
+    public LicensePayload getLicenseDetails() {
+        try {
+            File f = new File(licenseFilePath);
+            if (!f.exists()) {
+                log.warn("Lisans dosyası bulunamadı: {}", licenseFilePath);
+                return null;
+            }
 
-    /* --- helpers --- */
+            LicenseFile file = mapper.readValue(f, LicenseFile.class);
+            return file.getPayload();
+        } catch (Exception e) {
+            log.error("Lisans bilgileri okunamadı: {}", e.getMessage());
+            return null;
+        }
+    }
+
+
     private String hmacSha256Base64(String data, String key) throws Exception {
         Mac mac = Mac.getInstance("HmacSHA256");
         mac.init(new SecretKeySpec(key.getBytes(), "HmacSHA256"));

@@ -39,4 +39,11 @@ public class DiagController {
         String vin = elm.readVin();
         return ResponseEntity.ok(vin);
     }
+    
+    @PostMapping("/disconnect")
+    public ResponseEntity<?> disconnect() {
+        elm.disconnect();
+        return ResponseEntity.ok("OBD bağlantısı sonlandırıldı");
+    }
+
 }
